@@ -1,0 +1,136 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f8fafc;     /* Clean medical light blue-grey */
+  --foreground: #0f172a;     /* Dark slate text */
+  --card-bg: #ffffff;        /* Pure white cards */
+  --card-border: #e2e8f0;    /* Soft borders */
+  
+  --primary: #0284c7;        /* Medical Sky Blue */
+  --primary-hover: #0369a1;
+  --secondary: #0d9488;      /* Clinical Teal */
+  --secondary-hover: #0f766e;
+  --accent: #06b6d4;         /* Soft Cyan */
+  
+  --success: #10b981;        /* Normal Range Green */
+  --warning: #f59e0b;        /* Borderline Range Orange */
+  --error: #ef4444;          /* High Risk Red */
+  
+  --glow-color: rgba(14, 165, 233, 0.08);
+  --grid-color: rgba(226, 232, 240, 0.8);
+}
+
+/* Dark theme toggled class - optional, but keep support */
+.dark {
+  --background: #0f172a;
+  --foreground: #f8fafc;
+  --card-bg: #1e293b;
+  --card-border: #334155;
+  
+  --primary: #38bdf8;
+  --primary-hover: #0ea5e9;
+  --secondary: #2dd4bf;
+  --secondary-hover: #14b8a6;
+  
+  --glow-color: rgba(56, 189, 248, 0.15);
+  --grid-color: rgba(51, 65, 85, 0.4);
+}
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card-bg: var(--card-bg);
+  --color-card-border: var(--card-border);
+  --color-primary-color: var(--primary);
+  --color-secondary-color: var(--secondary);
+  --color-accent-color: var(--accent);
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  overflow-x: hidden;
+}
+
+/* Custom UI grids & telemetry lines */
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+@keyframes pulse-slow {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.85; }
+}
+
+.animate-scanline {
+  animation: scanline 6s linear infinite;
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 2.5s ease-in-out infinite;
+}
+
+/* Clean clinical blueprint/grid background */
+.tech-grid {
+  background-size: 30px 30px;
+  background-image: 
+    linear-gradient(to right, var(--grid-color) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-color) 1px, transparent 1px);
+}
+
+/* Scrollbars for medical console widgets */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+/* Premium Clinical Panel Shadows */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 4px 20px -2px rgba(148, 163, 184, 0.12);
+}
+
+.dark .glass-panel {
+  background: rgba(30, 41, 59, 0.85);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(51, 65, 85, 0.5);
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.3);
+}
+
+.neon-glow {
+  box-shadow: 0 4px 20px -2px var(--glow-color);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #0369a1, #0d9488);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.dark .text-gradient {
+  background: linear-gradient(135deg, #38bdf8, #2dd4bf);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
