@@ -1,11 +1,15 @@
 import { PatientData } from "@/components/PatientForm";
 import { LsciVideo } from "@/components/VideoSelector";
 import { ScreeningResults, RiskLevel } from "@/components/ResultReport";
+import { normalizeGender } from "@/utils/normalizeGender";
 
 export async function predictLipidRisks(
   patientData: PatientData,
   video: LsciVideo
 ): Promise<ScreeningResults> {
+  // Normalize gender before any API communication
+  const normalizedGender = normalizeGender(patientData.gender);
+
   try {
     const response = await fetch("/api/predict", {
       method: "POST",
@@ -13,7 +17,7 @@ export async function predictLipidRisks(
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        gender: patientData.gender,
+        gender: normalizedGender,
         age: patientData.age,
         weight: patientData.weight,
         height: patientData.height,

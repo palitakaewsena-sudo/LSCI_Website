@@ -1,167 +1,279 @@
 "use client";
 
-import React, { useState } from "react";
-import { Cpu, Play, ClipboardList, Activity, ArrowRight, ShieldCheck } from "lucide-react";
+import React, { useState, useCallback } from "react";
 import PatientForm, { PatientData } from "@/components/PatientForm";
 import VideoSelector, { LsciVideo, SAMPLE_VIDEOS } from "@/components/VideoSelector";
+import SignalChart from "@/components/SignalChart";
 import ProcessingSimulation from "@/components/ProcessingSimulation";
 import ResultReport, { ScreeningResults } from "@/components/ResultReport";
-import SpgVisualizer from "@/components/SpgVisualizer";
-import IppgVisualizer from "@/components/IppgVisualizer";
 import { predictLipidRisks } from "@/services/predictionService";
+import { Target, Activity, Cpu, AlertCircle } from "lucide-react";
 
-type ScreeningStep = "SETUP" | "PROCESSING" | "RESULTS";
+type Stage = "input" | "signals" | "processing" | "results";
 
-export default function PrototypeDemo() {
-  const [step, setStep] = useState<ScreeningStep>("SETUP");
-  const [patientData, setPatientData] = useState<PatientData | null>({
+export default function PrototypePage() {
+  const [patientData, setPatientData] = useState<PatientData>({
     gender: "male",
     age: 45,
     weight: 70,
     height: 172,
-    bmi: 23.66
+    bmi: 23.66,
   });
   const [selectedVideo, setSelectedVideo] = useState<LsciVideo>(SAMPLE_VIDEOS[0]);
-  const [screeningResults, setScreeningResults] = useState<ScreeningResults | null>(null);
+  const [patientConfirmed, setPatientConfirmed] = useState(false);
+  const [videoConfirmed, setVideoConfirmed] = useState(false);
 
-  const handleFormSubmit = (data: PatientData) => {
+  // Real signal data
+  const [spgData, setSpgData] = useState<number[]>([]);
+  const [nirData, setNirData] = useState<number[]>([]);
+  const [signalFps, setSignalFps] = useState(20);
+  const [signalLoading, setSignalLoading] = useState(false);
+  const [signalError, setSignalError] = useState("");
+
+  // Workflow
+  const [stage, setStage] = useState<Stage>("input");
+  const [results, setResults] = useState<ScreeningResults | null>(null);
+  const [predictionError, setPredictionError] = useState("");
+
+  // Step 1: Patient confirmed
+  const handlePatientSubmit = (data: PatientData) => {
     setPatientData(data);
+    setPatientConfirmed(true);
   };
 
-  const handleVideoSelect = (video: LsciVideo) => {
+  // Step 2: Video selected → load real signals
+  const handleVideoSelected = async (video: LsciVideo) => {
     setSelectedVideo(video);
-  };
+    setVideoConfirmed(true);
+    setSignalLoading(true);
+    setSignalError("");
+    setSpgData([]);
+    setNirData([]);
 
-  const startScreening = () => {
-    if (!patientData) {
-      alert("Please confirm the Patient Demographics form first.");
-      return;
+    try {
+      const res = await fetch(
+        `/api/signals?subject=${video.subjectId}&trial=${video.trial}`
+      );
+      if (!res.ok) {
+        throw new Error(`ไม่พบข้อมูลสัญญาณสำหรับ Subject ${video.subjectId}`);
+      }
+      const data = await res.json();
+      setSpgData(data.spg);
+      setNirData(data.nir_ippg);
+      setSignalFps(data.effectiveFps || 20);
+      setStage("signals");
+    } catch (err) {
+      setSignalError(
+        err instanceof Error ? err.message : "ไม่สามารถโหลดข้อมูลสัญญาณได้"
+      );
+    } finally {
+      setSignalLoading(false);
     }
-    setStep("PROCESSING");
   };
 
-  const handleProcessingComplete = async () => {
-    if (!patientData || !selectedVideo) return;
-    
-    // Call the prediction API service layer
-    const results = await predictLipidRisks(patientData, selectedVideo);
-    setScreeningResults(results);
-    setStep("RESULTS");
+  // Step 5: Run analysis
+  const handleRunAnalysis = async () => {
+    setStage("processing");
+    setPredictionError("");
   };
 
+  // Processing complete → get prediction
+  const handleProcessingComplete = useCallback(async () => {
+    try {
+      const prediction = await predictLipidRisks(patientData, selectedVideo);
+      setResults(prediction);
+      setStage("results");
+    } catch (err) {
+      setPredictionError("การวิเคราะห์ล้มเหลว กรุณาลองอีกครั้ง");
+      setStage("signals");
+    }
+  }, [patientData, selectedVideo]);
+
+  // Reset
   const handleReset = () => {
-    setStep("SETUP");
-    setScreeningResults(null);
+    setStage("input");
+    setPatientConfirmed(false);
+    setVideoConfirmed(false);
+    setResults(null);
+    setSpgData([]);
+    setNirData([]);
+    setSignalError("");
+    setPredictionError("");
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12 text-slate-900">
-      
-      {/* Title Header */}
-      <div className="space-y-4 max-w-3xl">
-        <span className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-500/30 text-sky-600 text-xs font-semibold uppercase tracking-wider">
-          <Cpu className="w-3.5 h-3.5" />
-          <span>Interactive Prototype</span>
-        </span>
-        <h1 className="text-4xl font-extrabold tracking-tight text-slate-900">
-          Zycel Prototype Demonstration
-        </h1>
-        <p className="text-slate-500 leading-relaxed text-sm sm:text-base">
-          Experience the non-invasive cardiovascular and lipid screening workflow. Set patient demographics, select an LSCI microvascular feed, view extracted waveforms, and compile predicted risk reports.
-        </p>
-      </div>
+    <div className="min-h-screen bg-white">
+      {/* Header */}
+      <section className="border-b border-slate-100 bg-slate-50">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+          <h1 className="text-2xl font-bold text-slate-800 mb-1">
+            ต้นแบบระบบคัดกรอง
+          </h1>
+          <p className="text-sm text-slate-500">
+            ทดลองใช้งานระบบคัดกรองความเสี่ยงทางหัวใจและหลอดเลือดจากวิดีโอ LSCI
+          </p>
+        </div>
+      </section>
 
-      {/* SETUP Step: Patient Form & Video/Waveform Selector Panel */}
-      {step === "SETUP" && (
-        <div className="space-y-8 animate-fade-in">
-          <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
-            
-            {/* Demographic Parameters - Left Column */}
-            <div className="xl:col-span-4 space-y-6">
-              <PatientForm
-                onFormSubmit={handleFormSubmit}
-                initialData={patientData || undefined}
-              />
-              
-              {/* Telemetry info callout */}
-              <div className="bg-white border border-slate-200 p-5 rounded-2xl text-xs text-slate-600 leading-relaxed space-y-3 shadow-sm">
-                <span className="font-bold flex items-center space-x-1.5 text-sky-600">
-                  <ClipboardList className="w-4 h-4" />
-                  <span>Demonstration Procedure</span>
-                </span>
-                <div className="space-y-1.5 pl-1.5 list-decimal">
-                  <p>1. Toggle biological sex, and enter subject height, weight, and age.</p>
-                  <p>2. Select an LSCI video capture template from the right panel.</p>
-                  <p>3. Drag the green ROI box on the speckle feed to isolate blood flow channels.</p>
-                  <p>4. Inspect the real-time **SPG** and **NIR-iPPG** waveforms extracted from the video.</p>
-                  <p>5. Click **Run AI Screening** to process serialization. Only risk bands are calculated.</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Video Selection & Live Waveforms - Right Column */}
-            <div className="xl:col-span-8 space-y-6">
-              {/* Main Selector */}
-              <div className="bg-white border border-slate-200 p-6 rounded-3xl shadow-sm">
-                <VideoSelector
-                  onVideoSelected={handleVideoSelect}
-                  selectedVideo={selectedVideo}
-                />
-              </div>
-
-              {/* Real-time Physiological Waveforms extracted from the LSCI feed */}
-              <div className="space-y-4">
-                <h3 className="text-base font-bold text-slate-900 flex items-center space-x-1.5 px-1">
-                  <Activity className="w-5 h-5 text-sky-500" />
-                  <span>Real-time Capillary Waveform Signal Extraction</span>
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <SpgVisualizer
-                    isScanning={true}
-                    videoIndex={selectedVideo.id - 1}
-                  />
-                  <IppgVisualizer
-                    isScanning={true}
-                    videoIndex={selectedVideo.id - 1}
-                  />
-                </div>
-              </div>
-            </div>
-
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+        {/* ── Step 1: Patient Data ──────────────────── */}
+        <div>
+          <div className="flex items-center gap-3 mb-4">
+            <div className={`step-badge ${patientConfirmed ? "completed" : ""}`}>1</div>
+            <h2 className="text-lg font-bold text-slate-700">กรอกข้อมูลพื้นฐาน</h2>
           </div>
-
-          {/* Screening Submission Centered Button */}
-          <div className="flex flex-col items-center pt-6 border-t border-slate-200">
-            <button
-              onClick={startScreening}
-              className="px-12 py-4 font-bold text-white bg-gradient-to-r from-sky-500 via-cyan-500 to-teal-500 hover:from-sky-600 hover:to-teal-600 rounded-2xl shadow-xl hover:shadow-sky-500/25 transition-all duration-300 transform hover:-translate-y-0.5 flex items-center space-x-3 text-lg cursor-pointer"
-            >
-              <Play className="w-5 h-5 fill-current" />
-              <span>Run AI Screening</span>
-            </button>
-            <p className="text-[10px] text-slate-400 mt-3 text-center max-w-sm">
-              Inference is processed using local scikit-learn models mapped to NCEP ATP-III criteria.
-            </p>
+          <div className="max-w-lg">
+            <PatientForm onFormSubmit={handlePatientSubmit} initialData={patientData} />
           </div>
         </div>
-      )}
 
-      {/* PROCESSING Step: Fullscreen 8-step simulation */}
-      <ProcessingSimulation
-        isRunning={step === "PROCESSING"}
-        onComplete={handleProcessingComplete}
-      />
+        {/* ── Step 2: Video Selection ──────────────── */}
+        {patientConfirmed && (
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className={`step-badge ${videoConfirmed ? "completed" : ""}`}>2</div>
+              <h2 className="text-lg font-bold text-slate-700">เลือกวิดีโอ LSCI</h2>
+            </div>
+            <div className="max-w-lg">
+              <VideoSelector
+                onVideoSelected={handleVideoSelected}
+                selectedVideo={selectedVideo}
+              />
+            </div>
+          </div>
+        )}
 
-      {/* RESULTS Step: Display Risk report card */}
-      {step === "RESULTS" && patientData && selectedVideo && screeningResults && (
-        <ResultReport
-          patientData={patientData}
-          video={selectedVideo}
-          results={screeningResults}
-          onReset={handleReset}
-        />
-      )}
+        {/* ── Step 3: ROI ─────────────────────────── */}
+        {videoConfirmed && (
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="step-badge completed">3</div>
+              <h2 className="text-lg font-bold text-slate-700">ตำแหน่ง ROI</h2>
+            </div>
+            <div className="sci-card max-w-lg">
+              <div className="flex items-center gap-3 mb-3">
+                <Target className="w-4 h-4 text-sky-700" />
+                <span className="text-sm font-semibold text-slate-700">
+                  Region of Interest (ROI)
+                </span>
+              </div>
+              <p className="text-sm text-slate-500">
+                ใช้พื้นที่ทั้งหมดของเฟรมวิดีโอ (Full Frame) เป็น ROI สำหรับสกัดสัญญาณ
+                ขนาดเฟรม 200×200 พิกเซล ที่อัตรา {selectedVideo.fps} FPS
+                ระยะเวลาบันทึก {selectedVideo.duration} วินาที
+              </p>
+              <div className="mt-3 flex items-center justify-center">
+                <div className="w-40 h-40 border-2 border-dashed border-sky-300 rounded-lg bg-sky-50 flex items-center justify-center relative">
+                  <span className="text-xs text-sky-500 font-mono">200 × 200 px</span>
+                  <div className="absolute -top-2 -left-2 w-3 h-3 border-t-2 border-l-2 border-sky-500" />
+                  <div className="absolute -top-2 -right-2 w-3 h-3 border-t-2 border-r-2 border-sky-500" />
+                  <div className="absolute -bottom-2 -left-2 w-3 h-3 border-b-2 border-l-2 border-sky-500" />
+                  <div className="absolute -bottom-2 -right-2 w-3 h-3 border-b-2 border-r-2 border-sky-500" />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
+        {/* ── Step 4: Signal Visualization ─────────── */}
+        {videoConfirmed && (
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className={`step-badge ${spgData.length > 0 ? "completed" : ""}`}>4</div>
+              <h2 className="text-lg font-bold text-slate-700">
+                สัญญาณ SPG และ NIR-iPPG
+              </h2>
+            </div>
+
+            {signalLoading && (
+              <div className="sci-card flex items-center gap-3">
+                <div className="w-5 h-5 border-2 border-sky-500 border-t-transparent rounded-full animate-spin" />
+                <span className="text-sm text-slate-500">กำลังโหลดข้อมูลสัญญาณจริง...</span>
+              </div>
+            )}
+
+            {signalError && (
+              <div className="sci-card flex items-center gap-3 bg-amber-50 border-amber-200">
+                <AlertCircle className="w-5 h-5 text-amber-500" />
+                <span className="text-sm text-amber-700">{signalError}</span>
+              </div>
+            )}
+
+            {spgData.length > 0 && nirData.length > 0 && (
+              <div className="space-y-4">
+                <SignalChart
+                  data={spgData}
+                  label="SPG (Speckle Plethysmography)"
+                  color="#0891b2"
+                  fps={signalFps}
+                />
+                <SignalChart
+                  data={nirData}
+                  label="NIR-iPPG (Near-Infrared Imaging Photoplethysmography)"
+                  color="#0369a1"
+                  fps={signalFps}
+                />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Step 5: Run Analysis ────────────────── */}
+        {stage === "signals" && spgData.length > 0 && (
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="step-badge">5</div>
+              <h2 className="text-lg font-bold text-slate-700">รันการวิเคราะห์</h2>
+            </div>
+            {predictionError && (
+              <div className="sci-card flex items-center gap-3 bg-red-50 border-red-200 mb-4">
+                <AlertCircle className="w-5 h-5 text-red-500" />
+                <span className="text-sm text-red-700">{predictionError}</span>
+              </div>
+            )}
+            <button onClick={handleRunAnalysis} className="btn-primary cursor-pointer">
+              <Cpu className="w-4 h-4" />
+              เริ่มวิเคราะห์ด้วย Machine Learning
+            </button>
+          </div>
+        )}
+
+        {/* ── Step 5 active: Processing ───────────── */}
+        {stage === "processing" && (
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="step-badge">5</div>
+              <h2 className="text-lg font-bold text-slate-700">กำลังประมวลผล</h2>
+            </div>
+            <div className="max-w-lg">
+              <ProcessingSimulation
+                isActive={true}
+                onComplete={handleProcessingComplete}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* ── Step 6: Results ─────────────────────── */}
+        {stage === "results" && results && (
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="step-badge completed">6</div>
+              <h2 className="text-lg font-bold text-slate-700">
+                ผลการประเมินความเสี่ยง
+              </h2>
+            </div>
+            <ResultReport results={results} patientData={patientData} />
+
+            <button
+              onClick={handleReset}
+              className="mt-6 px-6 py-2.5 rounded-lg border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
+            >
+              เริ่มการคัดกรองใหม่
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

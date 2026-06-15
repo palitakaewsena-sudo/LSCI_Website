@@ -2,16 +2,54 @@ import { NextResponse } from "next/server";
 import { exec } from "child_process";
 import path from "path";
 import fs from "fs";
+import { normalizeGender, isValidGender } from "@/utils/normalizeGender";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { gender, age, weight, height, bmi, videoFilename, videoId } = body;
 
-    // Validate request inputs
+    // Validate required fields
     if (!gender || !age || !weight || !height || !videoFilename) {
       return NextResponse.json(
         { error: "Missing required patient or signal parameters." },
+        { status: 400 }
+      );
+    }
+
+    // Normalize and validate gender
+    let normalizedGender: string;
+    try {
+      normalizedGender = normalizeGender(gender);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Invalid gender value.";
+      console.warn(`[API /predict] Gender validation failed for value: "${gender}"`);
+      return NextResponse.json(
+        { error: message },
+        { status: 400 }
+      );
+    }
+
+    // Validate numeric parameters
+    const ageNum = Number(age);
+    const weightNum = Number(weight);
+    const heightNum = Number(height);
+
+    if (isNaN(ageNum) || ageNum <= 0 || ageNum > 120) {
+      return NextResponse.json(
+        { error: "Age must be a number between 1 and 120." },
+        { status: 400 }
+      );
+    }
+    if (isNaN(weightNum) || weightNum <= 10 || weightNum > 300) {
+      return NextResponse.json(
+        { error: "Weight must be a number between 10 and 300 kg." },
+        { status: 400 }
+      );
+    }
+    if (isNaN(heightNum) || heightNum <= 50 || heightNum > 250) {
+      return NextResponse.json(
+        { error: "Height must be a number between 50 and 250 cm." },
         { status: 400 }
       );
     }
@@ -41,8 +79,8 @@ export async function POST(request: Request) {
 
     // If script and video are found, we can attempt Python model execution
     if (fs.existsSync(pythonScriptPath) && matchedVideoPath) {
-      const sexParam = gender === "male" ? "Male" : "Female";
-      const command = `python "${pythonScriptPath}" --video "${matchedVideoPath}" --sex "${sexParam}" --weight ${weight} --height ${height} --age ${age}`;
+      // Pass normalized lowercase gender — the Python CLI accepts: male, female, m, f, ชาย, หญิง
+      const command = `python "${pythonScriptPath}" --video "${matchedVideoPath}" --sex "${normalizedGender}" --weight ${weightNum} --height ${heightNum} --age ${ageNum}`;
       
       console.log(`Executing Python model inference pipeline: ${command}`);
       

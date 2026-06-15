@@ -26,13 +26,11 @@ export default function PatientForm({ onFormSubmit, initialData }: PatientFormPr
   const [bmi, setBmi] = useState<number>(0);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-  // Recalculate BMI automatically
   useEffect(() => {
     const w = parseFloat(weight);
     const h = parseFloat(height);
     if (w > 0 && h > 0) {
-      const calculatedBmi = w / Math.pow(h / 100, 2);
-      setBmi(parseFloat(calculatedBmi.toFixed(2)));
+      setBmi(parseFloat((w / Math.pow(h / 100, 2)).toFixed(2)));
     } else {
       setBmi(0);
     }
@@ -40,22 +38,18 @@ export default function PatientForm({ onFormSubmit, initialData }: PatientFormPr
 
   const validate = (): boolean => {
     const newErrors: { [key: string]: string } = {};
-
     const ageNum = parseFloat(age);
     if (!age || isNaN(ageNum) || ageNum <= 0 || ageNum > 120) {
-      newErrors.age = "Please enter a valid age (1 - 120).";
+      newErrors.age = "กรุณาระบุอายุที่ถูกต้อง (1–120 ปี)";
     }
-
     const weightNum = parseFloat(weight);
     if (!weight || isNaN(weightNum) || weightNum <= 10 || weightNum > 300) {
-      newErrors.weight = "Please enter a valid weight (10 - 300 kg).";
+      newErrors.weight = "กรุณาระบุน้ำหนักที่ถูกต้อง (10–300 กก.)";
     }
-
     const heightNum = parseFloat(height);
     if (!height || isNaN(heightNum) || heightNum <= 50 || heightNum > 250) {
-      newErrors.height = "Please enter a valid height (50 - 250 cm).";
+      newErrors.height = "กรุณาระบุส่วนสูงที่ถูกต้อง (50–250 ซม.)";
     }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -73,107 +67,101 @@ export default function PatientForm({ onFormSubmit, initialData }: PatientFormPr
     }
   };
 
-  // BMI classification colors and text
-  const getBmiClass = (bmiVal: number) => {
-    if (bmiVal <= 0) return { label: "N/A", color: "text-slate-400" };
-    if (bmiVal < 18.5) return { label: "Underweight", color: "text-amber-500 font-semibold" };
-    if (bmiVal < 25) return { label: "Normal weight", color: "text-emerald-500 font-semibold" };
-    if (bmiVal < 30) return { label: "Overweight", color: "text-amber-500 font-semibold" };
-    return { label: "Obese", color: "text-red-500 font-semibold animate-pulse-slow" };
+  const getBmiClass = (val: number) => {
+    if (val <= 0) return { label: "—", color: "text-slate-400" };
+    if (val < 18.5) return { label: "น้ำหนักน้อย", color: "text-amber-600" };
+    if (val < 25) return { label: "ปกติ", color: "text-green-600" };
+    if (val < 30) return { label: "น้ำหนักเกิน", color: "text-amber-600" };
+    return { label: "อ้วน", color: "text-red-600" };
   };
-
   const bmiClass = getBmiClass(bmi);
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="bg-card-bg border border-card-border p-6 rounded-2xl shadow-sm transition-all relative overflow-hidden"
-    >
-      <h3 className="text-lg font-bold text-foreground mb-6 flex items-center space-x-2">
-        <User className="w-5 h-5 text-sky-500" />
-        <span>1. Patient Demographics</span>
+    <form onSubmit={handleSubmit} className="sci-card">
+      <h3 className="text-base font-bold text-slate-800 mb-5 flex items-center gap-2">
+        <User className="w-4 h-4 text-sky-700" />
+        ข้อมูลผู้เข้ารับการคัดกรอง
       </h3>
 
       <div className="space-y-4">
-        {/* Gender Selection */}
+        {/* Gender */}
         <div>
-          <label className="block text-xs font-semibold text-foreground/70 uppercase tracking-wider mb-2">
-            Biological Sex
+          <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+            เพศ
           </label>
           <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
               onClick={() => setGender("male")}
-              className={`py-2 px-4 rounded-xl border text-sm font-semibold transition-all duration-200 ${
+              className={`py-2.5 px-4 rounded-lg border text-sm font-semibold transition-all cursor-pointer ${
                 gender === "male"
-                  ? "bg-sky-500/10 border-sky-500 text-sky-500 neon-glow"
-                  : "border-card-border text-foreground hover:bg-foreground/5"
+                  ? "bg-sky-50 border-sky-300 text-sky-700"
+                  : "border-slate-200 text-slate-600 hover:bg-slate-50"
               }`}
             >
-              Male
+              ชาย
             </button>
             <button
               type="button"
               onClick={() => setGender("female")}
-              className={`py-2 px-4 rounded-xl border text-sm font-semibold transition-all duration-200 ${
+              className={`py-2.5 px-4 rounded-lg border text-sm font-semibold transition-all cursor-pointer ${
                 gender === "female"
-                  ? "bg-sky-500/10 border-sky-500 text-sky-500 neon-glow"
-                  : "border-card-border text-foreground hover:bg-foreground/5"
+                  ? "bg-sky-50 border-sky-300 text-sky-700"
+                  : "border-slate-200 text-slate-600 hover:bg-slate-50"
               }`}
             >
-              Female
+              หญิง
             </button>
           </div>
         </div>
 
-        {/* Age Entry */}
+        {/* Age */}
         <div>
-          <label className="block text-xs font-semibold text-foreground/70 uppercase tracking-wider mb-1.5 flex items-center space-x-1">
+          <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
             <Calendar className="w-3.5 h-3.5" />
-            <span>Age (Years)</span>
+            อายุ (ปี)
           </label>
           <input
             type="number"
             value={age}
             onChange={(e) => setAge(e.target.value)}
-            className="w-full px-4 py-2.5 rounded-xl border border-card-border bg-background focus:outline-none focus:ring-2 focus:ring-sky-500 text-foreground transition-all"
-            placeholder="e.g. 45"
+            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-sky-200 focus:border-sky-400 text-slate-800 transition-all"
+            placeholder="เช่น 45"
             min="1"
             max="120"
           />
           {errors.age && <p className="text-xs text-red-500 mt-1">{errors.age}</p>}
         </div>
 
-        {/* Height and Weight Row */}
+        {/* Height & Weight */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-semibold text-foreground/70 uppercase tracking-wider mb-1.5 flex items-center space-x-1">
+            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
               <Ruler className="w-3.5 h-3.5" />
-              <span>Height (cm)</span>
+              ส่วนสูง (ซม.)
             </label>
             <input
               type="number"
               value={height}
               onChange={(e) => setHeight(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-card-border bg-background focus:outline-none focus:ring-2 focus:ring-sky-500 text-foreground transition-all"
-              placeholder="e.g. 172"
+              className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-sky-200 focus:border-sky-400 text-slate-800 transition-all"
+              placeholder="เช่น 172"
               min="50"
               max="250"
             />
             {errors.height && <p className="text-xs text-red-500 mt-1">{errors.height}</p>}
           </div>
-
           <div>
-            <label className="block text-xs font-semibold text-foreground/70 uppercase tracking-wider mb-1.5 flex items-center space-x-1">
+            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
               <Scale className="w-3.5 h-3.5" />
-              <span>Weight (kg)</span>
+              น้ำหนัก (กก.)
             </label>
             <input
               type="number"
               value={weight}
               onChange={(e) => setWeight(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-card-border bg-background focus:outline-none focus:ring-2 focus:ring-sky-500 text-foreground transition-all"
-              placeholder="e.g. 70"
+              className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-sky-200 focus:border-sky-400 text-slate-800 transition-all"
+              placeholder="เช่น 70"
               min="10"
               max="300"
             />
@@ -181,30 +169,32 @@ export default function PatientForm({ onFormSubmit, initialData }: PatientFormPr
           </div>
         </div>
 
-        {/* Dynamic BMI readout block */}
-        <div className="bg-slate-500/5 border border-card-border/50 p-4 rounded-xl flex items-center justify-between mt-4">
+        {/* BMI */}
+        <div className="bg-slate-50 border border-slate-200 p-4 rounded-lg flex items-center justify-between">
           <div>
-            <span className="text-[10px] uppercase tracking-wider text-foreground/50 font-bold block">
-              Calculated Body Mass Index (BMI)
+            <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">
+              ดัชนีมวลกาย (BMI)
             </span>
-            <span className="text-2xl font-bold text-foreground font-mono">
-              {bmi > 0 ? bmi : "--"}
+            <span className="text-2xl font-bold text-slate-800 font-mono">
+              {bmi > 0 ? bmi : "—"}
             </span>
           </div>
           {bmi > 0 && (
             <div className="text-right">
-              <span className="text-[10px] text-foreground/50 block">Classification</span>
-              <span className={bmiClass.color}>{bmiClass.label}</span>
+              <span className="text-[10px] text-slate-400 block">ระดับ</span>
+              <span className={`font-semibold text-sm ${bmiClass.color}`}>
+                {bmiClass.label}
+              </span>
             </div>
           )}
         </div>
 
         <button
           type="submit"
-          className="w-full mt-4 py-3 text-sm font-semibold text-white bg-gradient-to-r from-sky-500 to-teal-500 hover:from-sky-600 hover:to-teal-600 rounded-xl shadow-md transition-all duration-300 transform hover:-translate-y-0.5 flex items-center justify-center space-x-2 cursor-pointer"
+          className="w-full btn-primary mt-2 py-3 cursor-pointer"
         >
           <CheckCircle className="w-4 h-4" />
-          <span>Confirm Patient Parameters</span>
+          ยืนยันข้อมูล
         </button>
       </div>
     </form>
