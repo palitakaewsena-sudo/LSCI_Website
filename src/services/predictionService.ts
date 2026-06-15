@@ -49,50 +49,28 @@ function simulateClientPrediction(patientData: PatientData, video: LsciVideo): S
   let ldl: RiskLevel = "Low";
   let hdl: RiskLevel = "Low";
   let aip: RiskLevel = "Low";
+  let sdldl: RiskLevel = "Low";
   let hr: RiskLevel = "Low";
+  let hrVal = 72;
 
   switch (video.id) {
     case 1: // Healthy control
-      tg = "Low";
-      ldl = "Low";
-      hdl = "Low";
-      aip = "Low";
-      hr = "Low";
+      tg = "Low"; ldl = "Low"; hdl = "Low"; aip = "Low"; sdldl = "Low"; hr = "Low"; hrVal = 68;
       break;
     case 2: // Borderline metabolic
-      tg = "Moderate";
-      ldl = "Moderate";
-      hdl = "Low";
-      aip = "Moderate";
-      hr = "Low";
+      tg = "Moderate"; ldl = "Moderate"; hdl = "Low"; aip = "Moderate"; sdldl = "Moderate"; hr = "Low"; hrVal = 74;
       break;
     case 3: // Vascular Plaque / High Risk
-      tg = "High";
-      ldl = "High";
-      hdl = "High"; // Low HDL is High Risk
-      aip = "High";
-      hr = "Moderate";
+      tg = "High"; ldl = "High"; hdl = "High"; aip = "High"; sdldl = "High"; hr = "Moderate"; hrVal = 105;
       break;
     case 4: // Elevated Heart Rate
-      tg = "Low";
-      ldl = "Moderate";
-      hdl = "Low";
-      aip = "Low";
-      hr = "High"; // High HR Risk
+      tg = "Low"; ldl = "Moderate"; hdl = "Low"; aip = "Low"; sdldl = "Moderate"; hr = "High"; hrVal = 115;
       break;
     case 5: // Athletic Control
-      tg = "Low";
-      ldl = "Low";
-      hdl = "Low";
-      aip = "Low";
-      hr = "Low";
+      tg = "Low"; ldl = "Low"; hdl = "Low"; aip = "Low"; sdldl = "Low"; hr = "Low"; hrVal = 58;
       break;
     default:
-      tg = "Low";
-      ldl = "Low";
-      hdl = "Low";
-      aip = "Low";
-      hr = "Low";
+      tg = "Low"; ldl = "Low"; hdl = "Low"; aip = "Low"; sdldl = "Low"; hr = "Low"; hrVal = 72;
   }
 
   // Adjust risks based on BMI
@@ -106,6 +84,9 @@ function simulateClientPrediction(patientData: PatientData, video: LsciVideo): S
 
     if (aip === "Low") aip = "Moderate";
     else if (aip === "Moderate") aip = "High";
+    
+    if (sdldl === "Low") sdldl = "Moderate";
+    else if (sdldl === "Moderate") sdldl = "High";
   } else if (bmi >= 25 && bmi < 30) {
     // If overweight, upgrade at least one parameter
     if (tg === "Low") tg = "Moderate";
@@ -116,6 +97,8 @@ function simulateClientPrediction(patientData: PatientData, video: LsciVideo): S
     ldlRisk: ldl,
     hdlRisk: hdl,
     aipRisk: aip,
+    sdldlRisk: sdldl,
     hrRisk: hr,
+    hrValue: hrVal,
   };
 }

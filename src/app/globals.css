@@ -128,28 +128,51 @@ body {
   -webkit-text-fill-color: transparent;
 }
 
-/* ── Button Primary ────────────────────────────────── */
+/* ── Button Primary (Premium) ────────────────────────── */
 .btn-primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 12px 28px;
-  background: var(--primary);
+  gap: 10px;
+  padding: 14px 32px;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
   color: white;
-  font-weight: 600;
-  font-size: 15px;
-  border-radius: 10px;
+  font-weight: 700;
+  font-size: 16px;
+  border-radius: 9999px; /* Pill shape */
   border: none;
   cursor: pointer;
-  transition: background 0.2s ease, transform 0.15s ease;
+  box-shadow: 0 4px 14px 0 rgba(3, 105, 161, 0.39);
+  transition: all 0.3s ease;
 }
 .btn-primary:hover {
-  background: var(--primary-hover);
-  transform: translateY(-1px);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(3, 105, 161, 0.45);
 }
 
 /* ── Section spacing ───────────────────────────────── */
 .section-spacing {
-  padding: 64px 0;
+  padding: 80px 0;
+}
+
+/* ── Mesh Background ───────────────────────────────── */
+.bg-mesh {
+  background-color: #ffffff;
+  background-image: 
+    radial-gradient(at 80% 0%, hsla(189,100%,56%,0.1) 0px, transparent 50%),
+    radial-gradient(at 0% 50%, hsla(199,96%,45%,0.08) 0px, transparent 50%);
+}
+
+/* ── Interactive Cards ─────────────────────────────── */
+.sci-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  padding: 24px;
+  transition: all 0.3s ease;
+}
+.sci-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.08);
+  border-color: #bae6fd;
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import fs from "fs";
+import path from "path";
 
 /**
  * GET /api/signals?subject=235&trial=1
@@ -28,10 +29,8 @@ export async function GET(request: Request) {
       );
     }
 
-    // Build path to the processed signal CSV
-    const sep = "\\";
-    const basePath = ["C:", "Users", "palit", "Desktop", "Lipid_Signal_VS_Code", "data_for_train", "processed"].join(sep);
-    const csvPath = [basePath, subject, `${subject}-${trial}_filtered.csv`].join(sep);
+    // Build path to the processed signal CSV inside the public directory
+    const csvPath = path.join(process.cwd(), "public", "signals", `${subject}-${trial}_filtered.csv`);
 
     if (!fs.existsSync(csvPath)) {
       return NextResponse.json(
