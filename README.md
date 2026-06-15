@@ -1,36 +1,86 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Zycel: AI-Powered Non-Invasive Cardiovascular & Lipid Screening
 
-## Getting Started
+Zycel is an investor-ready, professional medical technology web platform designed to demonstrate non-invasive blood lipid risk screening using **Laser Speckle Contrast Imaging (LSCI)** and machine learning.
 
-First, run the development server:
+The platform processes dynamic microvascular perfusion signals captured from skin layers, extracts physiological metrics, and executes predictive scikit-learn regression models to classify cardiovascular risks into **Low**, **Moderate**, and **High Risk** categories.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+---
+
+## 🔬 Scientific & Optical Foundation
+
+Coherent laser light (785nm near-infrared) illuminating dermal tissue backscatters to generate a random interference **speckle pattern**. As red blood cells circulate in the capillary beds, they fluctuate this interference, causing focal blurring on a micro-CCD sensor.
+
+By computing the speckle contrast ($K = \sigma_I / \langle I \rangle$), the system measures capillary blood velocity profiles. Zycel extracts two primary waveforms from this capture:
+1. **SPG (Speckle Plethysmography)**: Resolves slow vasomotor oscillations (0.01 - 0.15 Hz) reflecting vascular compliance.
+2. **NIR-iPPG (Near-Infrared Imaging Photoplethysmography)**: Resolves pulsatile volume changes in underlying arterioles (0.5 - 4.0 Hz) reflecting direct heartbeat cycles.
+
+---
+
+## ⚙️ The 8-Step Processing Pipeline
+
+1. **Loading LSCI Video**: Resolves uncompressed backscatter frames.
+2. **Detecting ROI**: Establishes spatial boundaries to isolate capillary blood flow channels.
+3. **Extracting Physiological Signals**: Separates temporal intensity fluctuations from static tissue boundaries.
+4. **Generating SPG Waveform**: Computes slow vasomotion velocity metrics.
+5. **Generating NIR-iPPG Waveform**: Resolves volumetric heart pulse wave shapes.
+6. **Extracting Features**: Calculates time-frequency characteristics (Sample Entropy, Approximate Entropy).
+7. **Running AI Models**: Feeds features and patient BMI into trained regression models.
+8. **Generating Risk Report**: Maps scores against NCEP ATP-III criteria to classify TG, LDL, HDL, AIP, and HR risks.
+
+---
+
+## 🏗️ Commercial MedTech Architecture
+
+Zycel is architected to transition from a prototype simulation into a production cardiovascular screening endpoint:
+
+```
+[ Next.js Client App (Tailwind CSS v4) ]
+                   │
+                   ▼ (Secure JSON Request)
+[ Server API Route: /api/predict ]
+                   │
+                   ▼ (REST / Child Process Execution)
+[ Local Python Script / FastAPI Microservice ]
+                   │
+                   ▼ (Inference Load)
+[ Trained ML Models: Ridge / HistGradientBoosting (joblib) ]
+                   │
+                   ▼ (Reference Check)
+[ NCEP ATP-III Risk Boundaries & Mappings ]
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 💻 Local Setup & Development
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 1. Requirements
+* Node.js v18.0 or higher
+* npm v9.0 or higher
 
-## Learn More
+### 2. Installation
+Clone the repository and install npm packages:
+```bash
+git clone https://github.com/palitakaewsena-sudo/LSCI_Website.git
+cd LSCI_Website
+npm install
+```
 
-To learn more about Next.js, take a look at the following resources:
+### 3. Run Development Server
+```bash
+npm run dev
+```
+Open [http://localhost:3000](http://localhost:3000) in your browser to view the interactive console.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🚀 One-Click Vercel Deployment
 
-## Deploy on Vercel
+Zycel is fully optimized for hosting on **Vercel**:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. **Import Project**: Log into the [Vercel Dashboard](https://vercel.com) and import the repository: `https://github.com/palitakaewsena-sudo/LSCI_Website.git`
+2. **Environment Variables**:
+   If linking to an external FastAPI backend in production, define the API endpoint url:
+   * `NEXT_PUBLIC_API_URL` = `https://your-fastapi-backend.com`
+3. **Deploy**: Click **Deploy**. Vercel will build the static routes and serverless API functions automatically.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+*Note: The Next.js API route `/api/predict` handles local child-process Python execution when running on local machines, and automatically falls back to high-fidelity client-side deterministic simulations when deployed to Serverless cloud environments like Vercel.*
