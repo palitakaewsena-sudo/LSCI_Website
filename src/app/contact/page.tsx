@@ -32,7 +32,7 @@ export default function ContactPage() {
             <div>
               <h3 className="font-semibold text-slate-800">ที่อยู่</h3>
               <p className="text-sm text-slate-500">
-                ห้องปฏิบัติการวิจัย วิศวกรรมชีวการแพทย์
+                มหาวิทยาลัยอุบลราชธานี
               </p>
             </div>
           </div>

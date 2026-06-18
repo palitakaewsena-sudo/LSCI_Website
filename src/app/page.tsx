@@ -107,7 +107,7 @@ export default function Home() {
                         อุปกรณ์ต้นแบบ LSCI
                       </p>
                       <p className="text-[11px] text-slate-500 font-medium">
-                        Laser 850nm / 120 FPS
+                        Laser 785nm / 120 FPS
                       </p>
                     </div>
                   </div>

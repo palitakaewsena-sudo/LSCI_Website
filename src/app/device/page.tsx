@@ -44,7 +44,7 @@ export default function DevicePage() {
                 <h2 className="text-lg font-bold text-slate-800 mb-4">ข้อมูลจำเพาะ</h2>
                 <div className="space-y-3 text-sm">
                   {[
-                    ["แหล่งกำเนิดแสง", "เลเซอร์ NIR 850nm"],
+                    ["แหล่งกำเนิดแสง", "เลเซอร์ NIR 785nm"],
                     ["เซ็นเซอร์", "กล้อง CCD ความไวสูง"],
                     ["อัตราเฟรม", "120 FPS"],
                     ["ขนาดเฟรม", "200 × 200 พิกเซล"],
